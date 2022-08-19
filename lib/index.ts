@@ -10,6 +10,7 @@ class ThumbnailSprite extends Plugin {
     super(player);
     const emptyOptions: ThumbnailSprite.Options = {
       sprites: [],
+      responsiveWidthLimit: 0
     }
     this.options = (options !== undefined) ? options : emptyOptions;
     
@@ -30,6 +31,7 @@ namespace ThumbnailSprite {
     // 이후 스타일 추가 등으로 확장 가능성
   export interface Options {
     sprites: Array<Sprite>;
+    responsiveWidthLimit: number;
   }
   export interface Sprite {
     url: string;      // thumbnail sprite's url

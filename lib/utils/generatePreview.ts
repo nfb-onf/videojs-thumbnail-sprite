@@ -6,7 +6,8 @@ import applyStyle from './applyStyle';
 function generatePreview(
   player: videojs.Player,
   controls: TS.IIndexableComponent,
-  sprites: Array<TS.Sprite>
+  sprites: Array<TS.Sprite>,
+  responsiveWidthGuideline: number
 ): void {
   const dom = videojs.dom;
   let sprite: TS.Sprite;
@@ -61,38 +62,49 @@ function generatePreview(
   // so just use the first sprite
 
   // calculate which image inside the sprite to use
-  spriteIndex = (optionIndex !== -1) ? (hoverPoint - sprites[optionIndex].start) / sprites[optionIndex].interval : hoverPoint;
-  sprite = (optionIndex !== -1) ? sprites[optionIndex] : sprites[0];
-  
-  // create temporary `img` element to get the size of sprite thumbnail
-  const image = dom.createEl('img', { src: sprite.url });
-  const imageWidth = image.naturalWidth;
-  const imageHeight = image.naturalHeight;
+  spriteIndex = optionIndex !== -1 ? (hoverPoint - sprites[optionIndex].start) / sprites[optionIndex].interval : hoverPoint;
+  sprite = optionIndex !== -1 ? sprites[optionIndex] : sprites[0]; // create temporary `img` element to get the size of sprite thumbnail
 
-  // get the coordinate to extract preview image from sprite thumbnail
-  const columns = imageWidth / sprite.width;
-  const columnTop = Math.floor(spriteIndex / columns) * -sprite.height;
-  const columnLeft = Math.floor(spriteIndex % columns) * -sprite.width;
 
-  // get the position to display preview image
-  const controlsTop = dom.getBoundingClientRect(controls.el()).top;
-  const seekBarTop = dom.getBoundingClientRect(controls.el()).top;
-  const topOffset = -sprite.height - Math.max(0, seekBarTop - controlsTop);
-    
-  // apply image preview
-  applyStyle(timeTooltipEl, {
-    width: `${sprite.width}px`,
-    height: `${sprite.height}px`,
-    'background-image': `url(${sprite.url})`,
-    'background-repeat': `no-repeat`,
-    'background-position': `${columnLeft}px ${columnTop}px`,
-    'background-size': `${imageWidth}px ${imageHeight}px;`,
-    top: `${topOffset}px`,
-    color: `#ffffff`,
-    'text-shadow': `1px 1px #000000`,
-    border: `1px 1px #000000`,
-    margin: `0 1px`
+  //calculate scaling factor according to responsiveWidthGuideline option
+  var playerWidth = player.currentWidth();
+  var scale = responsiveWidthGuideline && playerWidth < responsiveWidthGuideline ? playerWidth / responsiveWidthGuideline : 1; 
+
+  var image = dom.createEl('img', {
+    src: sprite.url
   });
+  var imageWidth = image.naturalWidth;
+  var imageHeight = image.naturalHeight; // get the coordinate to extract preview image from sprite thumbnail
+
+  var spriteWidth = sprite.width * scale;
+  var spriteHeight = sprite.height * scale;
+
+  var columns = imageWidth / sprite.width;
+  var columnTop = Math.floor(spriteIndex / columns) * -spriteHeight;
+  var columnLeft = Math.floor(spriteIndex % columns) * -spriteWidth; // get the position to display preview image
+
+  var controlsTop = dom.getBoundingClientRect(controls.el()).top;
+  var seekBarTop = dom.getBoundingClientRect(controls.el()).top;
+  var topOffset = -spriteHeight - Math.max(0, seekBarTop - controlsTop); // apply image preview
+
+  var backgroundSize = (imageWidth * scale) + "px " + (imageHeight * scale) + "px";
+
+  var style = {
+    width: spriteWidth + "px",
+    height: spriteHeight + "px",
+    'background-image': "url(" + sprite.url + ")",
+    'background-repeat': "no-repeat",
+    'background-position': columnLeft + "px " + columnTop + "px",
+    'background-size': backgroundSize,
+    top: topOffset + "px",
+    color: "#ffffff",
+    'text-shadow': "1px 1px #000000",
+    border: "1px solid #000000",
+    margin: "0 1px"
+  };
+
+  applyStyle(timeTooltipEl, style); 
+  
   // TODO
   // apply global style from `options` parameter
 }

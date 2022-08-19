@@ -11,7 +11,7 @@ function initializeThumbnailSprite(player: videojs.Player, options: TS.Options):
   // No need to initialize the plugin
   if (options.sprites === undefined)
     return ;
-  const { sprites } = options;
+  const { sprites, responsiveWidthLimit } = options;
 
   // If there is no Control Bar UI or no Progress Control UI,
   // No need to initialize the plugin
@@ -36,8 +36,8 @@ function initializeThumbnailSprite(player: videojs.Player, options: TS.Options):
   checkOptions(sprites);
 
   // Register event listener for hovering on progress control
-  progressCtrl.on(`mousemove`, () => generatePreview(player, controls, sprites));
-  progressCtrl.on(`touchmove`, () => generatePreview(player, controls, sprites));
+  progressCtrl.on(`mousemove`, () => generatePreview(player, controls, sprites, responsiveWidthLimit));
+  progressCtrl.on(`touchmove`, () => generatePreview(player, controls, sprites, responsiveWidthLimit));
   // Add class to enable styling
   player.addClass(`vjs-sprite-thumbnails`);
 }
