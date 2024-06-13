@@ -1,5 +1,3 @@
-import initializeThumbnailSprite from './initializeThumbnailSprite';
-
 import applyStyle from './applyStyle';
 import checkOptions from './checkOptions';
 import checkOverlap from './checkOverlap';
@@ -9,7 +7,6 @@ import generatePreview from './generatePreview';
 import sortSprites from './sortSprites';
 
 export {
-  initializeThumbnailSprite,
   applyStyle,
   checkOptions,
   checkOverlap,
