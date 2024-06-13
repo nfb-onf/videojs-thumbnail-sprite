@@ -1,5 +1,11 @@
 import videojs from 'video.js';
-import initializeThumbnailSprite from './utils/initializeThumbnailSprite';
+import TS from './index';
+
+import sortSprites from './utils/sortSprites';
+import checkOverlap from './utils/checkOverlap';
+import checkOptions from './utils/checkOptions';
+import generatePreview from './utils/generatePreview';
+
 
 const Plugin = videojs.getPlugin('plugin');
 
@@ -16,12 +22,60 @@ class ThumbnailSprite extends Plugin {
     
     // When player instance is ready, initialize the plugin
     this.player.ready(() => {
-      initializeThumbnailSprite(
+      this.initializeThumbnailSprite(
         this.player,
         this.options,
       );
     });
   }
+
+  dispose () {
+    if (this.player.controlBar && 'progressControl' in this.player.controlBar) {
+      const progressCtrl: TS.IIndexableComponent = (this.player.controlBar as TS.IIndexableComponent)['progressControl']
+      progressCtrl.off(`mousemove`, this.onMoveOnControlBar);
+      progressCtrl.off(`touchmove`, this.onMoveOnControlBar);
+    }
+    super.dispose()
+  }
+
+  initializeThumbnailSprite(player: videojs.Player, options: TS.Options): void {
+    // If there is no option provided,
+    // No need to initialize the plugin
+    if (options.sprites === undefined)
+      return ;
+  
+    // If there is no Control Bar UI or no Progress Control UI,
+    // No need to initialize the plugin
+    if (player.controlBar === undefined)
+      return ;
+    
+    const controls: TS.IIndexableComponent = player.controlBar;
+    if (controls['progressControl'] === undefined)
+      return ;
+    
+    const progressCtrl: TS.IIndexableComponent = controls['progressControl'];
+  
+    // Sort sprite images to prevent inappropriate order
+    sortSprites(options.sprites);
+  
+    // Check if the sprite thumbnails have overlapping section among them,
+    // so that previews display their corresponding points of time correctly
+    checkOverlap(options.sprites);
+  
+    // Check if the sprite thumbnails have all required options properly,
+    // so that generating each previews executes correctly
+    checkOptions(options.sprites);
+  
+    // Register event listener for hovering on progress control
+    progressCtrl.on(`mousemove`, this.onMoveOnControlBar);
+    progressCtrl.on(`touchmove`, this.onMoveOnControlBar);
+    // Add class to enable styling
+    player.addClass(`vjs-sprite-thumbnails`);
+  }
+  
+  onMoveOnControlBar = () => {
+    generatePreview(this.player, this.player.controlBar, this.options.sprites, this.options.responsiveWidthLimit)
+  }  
 }
 
 videojs.registerPlugin('thumbnailSprite', ThumbnailSprite);
